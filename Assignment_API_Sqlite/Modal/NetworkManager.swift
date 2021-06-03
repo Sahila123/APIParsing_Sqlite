@@ -64,13 +64,14 @@ class NetworkManager {
         for userDict in userArray {
             
             if let userDict = userDict as? [String : Any],
+                let id = userDict["id"] as? Int,
                 let name = userDict["name"] as? String,
                 let email = userDict["email"] as? String,
                 let address = userDict["address"] as? [String : Any],
                 let zipcode = address["zipcode"] as? String,
                 let company = userDict["company"] as? [String : Any],
                 let companyName = company["name"] as? String {
-                DBHelper.shared.insert(userObj: User(name: name, email: email, zipcode: zipcode, companyName: companyName))
+                DBHelper.shared.insert(userObj: User(id: id, name: name, email: email, zipcode: zipcode, companyName: companyName))
             } else {
                 print("Error in User Dict")
             }

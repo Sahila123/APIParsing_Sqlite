@@ -36,7 +36,9 @@ class DBHelper {
     }
     
     func createTable() {
-        let createTableString = "CREATE TABLE IF NOT EXISTS \(tableName)(Id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT,zipcode TEXT,companyName TEXT);"
+//        let createTableString = "CREATE TABLE IF NOT EXISTS \(tableName)(Id INTEGER PRIMARY KEY,name TEXT,email TEXT,zipcode TEXT,companyName TEXT,UNIQUE(Id));"
+        let createTableString = "CREATE TABLE IF NOT EXISTS \(tableName)(Id INTEGER PRIMARY KEY,name TEXT,email TEXT,zipcode TEXT,companyName TEXT);"
+
         var createTableStatement: OpaquePointer? = nil
         if sqlite3_prepare_v2(db, createTableString, -1, &createTableStatement, nil) == SQLITE_OK {
             if sqlite3_step(createTableStatement) == SQLITE_DONE {
@@ -52,14 +54,21 @@ class DBHelper {
     
     
     
-    func insert(userObj: User) {        
-        let insertStatementString = "INSERT INTO \(tableName) (name, email, zipcode, companyName) VALUES (?, ?, ?, ?);"
+    func insert(userObj: User) {
+        let users = read()
+        for user in users {
+            if user.id == userObj.id {
+                return
+            }
+        }
+        let insertStatementString = "INSERT INTO \(tableName) (Id, name, email, zipcode, companyName) VALUES (?, ?, ?, ?, ?);"
         var insertStatement: OpaquePointer? = nil
         if sqlite3_prepare_v2(db, insertStatementString, -1, &insertStatement, nil) == SQLITE_OK {
-            sqlite3_bind_text(insertStatement, 1, ((userObj.name ?? "") as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(insertStatement, 2, ((userObj.email ?? "") as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(insertStatement, 3, ((userObj.zipcode ?? "") as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(insertStatement, 4, ((userObj.companyName ?? "") as NSString).utf8String, -1, nil)
+            sqlite3_bind_int(insertStatement, 1, Int32(userObj.id ?? 0))
+            sqlite3_bind_text(insertStatement, 2, ((userObj.name ?? "") as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(insertStatement, 3, ((userObj.email ?? "") as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(insertStatement, 4, ((userObj.zipcode ?? "") as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(insertStatement, 5, ((userObj.companyName ?? "") as NSString).utf8String, -1, nil)
             if sqlite3_step(insertStatement) == SQLITE_DONE {
                 print("Successfully inserted row.")
             } else {
@@ -78,12 +87,13 @@ class DBHelper {
         var userObject : [User] = []
         if sqlite3_prepare_v2(db, queryStatementString, -1, &queryStatement, nil) == SQLITE_OK {
             while sqlite3_step(queryStatement) == SQLITE_ROW {
+                let id = Int(sqlite3_column_int(queryStatement, 0))
                 let name = String(describing: String(cString: sqlite3_column_text(queryStatement, 1)))
                 let email = String(describing: String(cString: sqlite3_column_text(queryStatement, 2)))
                 let zipcode = String(describing: String(cString: sqlite3_column_text(queryStatement, 3)))
                 let companyName = String(describing: String(cString: sqlite3_column_text(queryStatement, 4)))
                 
-                userObject.append(User(name: name, email: email, zipcode: zipcode, companyName: companyName))
+                userObject.append(User(id: id, name: name, email: email, zipcode: zipcode, companyName: companyName))
             }
         } else {
             print("SELECT statement could not be prepared")
@@ -93,3 +103,4 @@ class DBHelper {
     }
     
 }
+

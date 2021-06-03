@@ -10,13 +10,15 @@ import Foundation
 
 
 struct User {
+    var id : Int?
     var name : String?
     var email : String?
     var zipcode : String?
     var companyName : String?
     
     
-    init(name: String?, email: String?, zipcode: String?, companyName: String? ) {
+    init(id: Int?, name: String?, email: String?, zipcode: String?, companyName: String? ) {
+        self.id = id
         self.name = name
         self.email = email
         self.zipcode = zipcode
